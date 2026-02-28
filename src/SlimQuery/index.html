@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlimQuery - Micro ORM for .NET</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F7F6F3; color: #1A1714; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; padding: 48px 32px; }
+    .container { max-width: 1040px; margin: 0 auto; }
+    .dot-bg { position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(circle, #C8C2B8 1px, transparent 1px); background-size: 28px 28px; opacity: 0.5; }
+    .content { position: relative; z-index: 1; }
+    
+    /* Header */
+    .header { text-align: center; margin-bottom: 56px; }
+    .badge { display: inline-block; font-family: monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #1A7A4A; border: 1px solid #A8DFC4; background: #EBF7F1; padding: 4px 14px; border-radius: 4px; margin-bottom: 16px; }
+    .title { font-size: 42px; font-weight: 900; letter-spacing: -2; line-height: 1; color: #1A1714; margin-bottom: 8px; }
+    .subtitle { font-size: 13px; color: #6B6560; margin-bottom: 16px; font-family: monospace; }
+    .tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    
+    /* Tag */
+    .tag { display: inline-flex; align-items: center; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-family: monospace; white-space: nowrap; font-weight: 600; }
+    .tag-green { background: #EBF7F1; color: #1A7A4A; border: 1px solid #A8DFC4; }
+    .tag-blue { background: #EBF0FA; color: #1A4FA0; border: 1px solid #A8C0E8; }
+    .tag-amber { background: #FBF3E8; color: #92550A; border: 1px solid #E8C98A; }
+    .tag-purple { background: #F0EBF7; color: #5A1A9A; border: 1px solid #C4A8E8; }
+    .tag-teal { background: #EBF7F7; color: #0A7A7A; border: 1px solid #A8DFDF; }
+    .tag-rose { background: #FAE8EC; color: #9A1A2E; border: 1px solid #E8A8B4; }
+    
+    /* Section */
+    .section { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .section span { font-family: monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #A09A93; font-weight: 600; }
+    .section div { flex: 1; height: 1px; background: #E2DDD6; }
+    
+    /* Card */
+    .card { background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 10px; padding: 16px 14px; cursor: pointer; transition: all 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+    .card-left { border-left: 3px solid; }
+    .card-blue { border-left-color: #1A4FA0; }
+    .card-amber { border-left-color: #92550A; }
+    .card-green { border-left-color: #1A7A4A; }
+    .card-purple { border-left-color: #5A1A9A; }
+    .card-teal { border-left-color: #0A7A7A; }
+    .card-rose { border-left-color: #9A1A2E; }
+    
+    /* Philosophy Grid */
+    .philo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .philo-icon { font-size: 22px; margin-bottom: 8px; }
+    .philo-title { font-size: 12px; font-weight: 700; color: #1A1714; margin-bottom: 4px; }
+    .philo-desc { font-size: 10px; color: #6B6560; line-height: 1.6; }
+    
+    /* API Grid */
+    .api-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+    .api-icon { font-size: 20px; margin-bottom: 8px; }
+    .api-name { font-size: 13px; font-weight: 700; color: #1A1714; margin-bottom: 3px; }
+    .api-desc { font-size: 10px; color: #6B6560; line-height: 1.6; margin-bottom: 8px; }
+    .api-methods { display: none; flex-direction: column; gap: 4px; }
+    .card.expanded .api-methods { display: flex; }
+    .api-code { font-size: 9px; font-family: monospace; border-radius: 4px; padding: 4px 7px; line-height: 1.5; }
+    .card-blue .api-code { background: #EBF0FA; color: #1A4FA0; border: 1px solid #A8C0E8; }
+    .card-amber .api-code { background: #FBF3E8; color: #92550A; border: 1px solid #E8C98A; }
+    .card-green .api-code { background: #EBF7F1; color: #1A7A4A; border: 1px solid #A8DFC4; }
+    .card-purple .api-code { background: #F0EBF7; color: #5A1A9A; border: 1px solid #C4A8E8; }
+    .card-click-hint { display: block; }
+    .card.expanded .card-click-hint { display: none; }
+    
+    /* Core Grid */
+    .core-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 10px; padding: 20px; }
+    .core-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .core-title span:first-child { font-size: 16px; }
+    .core-title span:last-child { font-family: monospace; font-size: 11px; font-weight: 700; }
+    .core-desc { font-size: 10px; color: #6B6560; line-height: 1.6; }
+    .core-details { display: none; margin-top: 8px; flex-direction: column; gap: 3px; }
+    .card-core:hover .core-details { display: flex; }
+    .card-core { cursor: pointer; transition: all 0.18s; }
+    .card-core:hover { background: #F0EEE9; }
+    
+    /* DB Grid */
+    .db-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .db-icon { font-size: 22px; margin-bottom: 8px; }
+    .db-name { font-size: 13px; font-weight: 700; color: #1A1714; margin-bottom: 6px; }
+    
+    /* Comparison */
+    .comparison { background: #FFFFFF; border: 1px solid #E2DDD6; border-radius: 10px; overflow: hidden; }
+    .comparison table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 11px; }
+    .comparison th { text-align: left; padding: 12px 16px; background: #F0EEE9; border-bottom: 1px solid #E2DDD6; }
+    .comparison th.dapper { text-align: center; color: #92550A; }
+    .comparison th.ef { text-align: center; color: #1A4FA0; }
+    .comparison th.slim { text-align: center; color: #1A7A4A; background: #EBF7F1; }
+    .comparison td { padding: 10px 16px; border-bottom: 1px solid #E2DDD6; }
+    .comparison tr:nth-child(even) { background: #F7F6F3; }
+    .comparison tr:nth-child(odd) { background: #FFFFFF; }
+    .check { color: #1A7A4A; }
+    .dash { color: #A09A93; }
+    
+    /* Arrow */
+    .arrow { display: flex; flex-direction: column; align-items: center; padding: 4px 0; margin: 8px 0; }
+    .arrow-label { font-family: monospace; font-size: 9px; color: #A09A93; letter-spacing: 0.1em; }
+    .arrow svg { width: 2; height: 32; overflow: visible; }
+    .arrow line { stroke: #C8C2B8; stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .arrow polygon { fill: #C8C2B8; }
+    
+    /* Footer */
+    .footer { margin-top: 48px; text-align: center; font-family: monospace; font-size: 11px; color: #A09A93; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    
+    /* Core Header */
+    .core-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 14px; font-weight: 800; color: #1A1714; }
+    .core-header .dot { width: 8; height: 8; border-radius: 50%; background: #1A7A4A; }
+    .core-header .tag { margin-left: auto; }
+  </style>
+</head>
+<body>
+  <div class="dot-bg"></div>
+  <div class="container content">
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="badge">System Design</div>
+      <h1 class="title">SlimQuery</h1>
+      <p class="subtitle">A micro ORM for .NET — the best of Dapper + EF Core, without the tradeoffs</p>
+      <div class="tags">
+        <span class="tag tag-amber">Dapper speed</span>
+        <span class="tag tag-blue">EF query builder</span>
+        <span class="tag tag-purple">Native bulk ops</span>
+        <span class="tag tag-rose">No change tracking</span>
+        <span class="tag tag-teal">.NET 10</span>
+      </div>
+    </div>
+
+    <!-- Philosophy -->
+    <div class="section"><span>Design Philosophy</span><div></div></div>
+    <div class="philo-grid">
+      <div class="card card-left card-amber">
+        <div class="philo-icon">⚡</div>
+        <div class="philo-title">Speed of Dapper</div>
+        <div class="philo-desc">Compiled expression mappings. No reflection at runtime.</div>
+      </div>
+      <div class="card card-left card-blue">
+        <div class="philo-icon">🔤</div>
+        <div class="philo-title">SQL You Control</div>
+        <div class="philo-desc">Raw SQL always available. No magic. No surprises.</div>
+      </div>
+      <div class="card card-left card-green">
+        <div class="philo-icon">🪶</div>
+        <div class="philo-title">Zero Bloat</div>
+        <div class="philo-desc">No DbContext. No entity tracking. No 200MB dependency tree.</div>
+      </div>
+      <div class="card card-left card-rose">
+        <div class="philo-icon">🚫</div>
+        <div class="philo-title">No Change Tracking</div>
+        <div class="philo-desc">Explicit updates only. No hidden state, no dirty contexts, no surprises.</div>
+      </div>
+    </div>
+
+    <div class="arrow"><span class="arrow-label">developer calls</span><svg><line x1="1" y1="0" x2="1" y2="28"/><polygon points="1,32 -2,26 4,26"/></svg></div>
+
+    <!-- API -->
+    <div class="section"><span>Public API Surface</span><div></div></div>
+    <div class="api-grid">
+      <div class="card card-blue" onclick="this.classList.toggle('expanded')">
+        <div class="api-icon">🔍</div>
+        <div class="api-name">Query Builder</div>
+        <div class="api-desc">Fluent SQL without strings</div>
+        <div class="card-click-hint"><span class="tag tag-blue">click to expand</span></div>
+        <div class="api-methods">
+          <div class="api-code">db.From&lt;User&gt;().Where(x =&gt; x.Active).ToListAsync()</div>
+          <div class="api-code">db.From&lt;Order&gt;().Select(x =&gt; new{x.Id,x.Total}).FirstAsync()</div>
+          <div class="api-code">db.From&lt;T&gt;().OrderBy(x=&gt;x.Price).Skip(10).Take(5).ToListAsync()</div>
+        </div>
+      </div>
+      <div class="card card-amber" onclick="this.classList.toggle('expanded')">
+        <div class="api-icon">⚡</div>
+        <div class="api-name">Raw SQL</div>
+        <div class="api-desc">Full control like Dapper</div>
+        <div class="card-click-hint"><span class="tag tag-amber">click to expand</span></div>
+        <div class="api-methods">
+          <div class="api-code">db.QueryAsync&lt;User&gt;("SELECT * FROM users WHERE id=@Id", new{Id=1})</div>
+          <div class="api-code">db.ExecuteAsync("UPDATE users SET active=@v WHERE id=@Id", p)</div>
+          <div class="api-code">db.ExecuteScalarAsync&lt;int&gt;("SELECT COUNT(*) FROM orders")</div>
+        </div>
+      </div>
+      <div class="card card-green" onclick="this.classList.toggle('expanded')">
+        <div class="api-icon">📦</div>
+        <div class="api-name">CRUD Helpers</div>
+        <div class="api-desc">Zero-SQL common operations</div>
+        <div class="card-click-hint"><span class="tag tag-green">click to expand</span></div>
+        <div class="api-methods">
+          <div class="api-code">db.InsertAsync(user)</div>
+          <div class="api-code">db.UpdateAsync(user)</div>
+          <div class="api-code">db.DeleteAsync&lt;User&gt;(id)</div>
+          <div class="api-code">db.GetByIdAsync&lt;User&gt;(id)</div>
+        </div>
+      </div>
+      <div class="card card-purple" onclick="this.classList.toggle('expanded')">
+        <div class="api-icon">🚀</div>
+        <div class="api-name">Bulk Ops</div>
+        <div class="api-desc">Native bulk — missing in Dapper</div>
+        <div class="card-click-hint"><span class="tag tag-purple">click to expand</span></div>
+        <div class="api-methods">
+          <div class="api-code">db.BulkInsertAsync(users)</div>
+          <div class="api-code">db.BulkUpdateAsync(orders)</div>
+          <div class="api-code">db.BulkDeleteAsync&lt;Product&gt;(ids)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"><span class="arrow-label">translates to</span><svg><line x1="1" y1="0" x2="1" y2="28"/><polygon points="1,32 -2,26 4,26"/></svg></div>
+
+    <!-- Core -->
+    <div class="section"><span>Core Engine Modules</span><div></div></div>
+    <div class="core-grid">
+      <div class="card card-core card-blue" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>🗺️</span><span style="color:#1A4FA0">Object Mapper</span></div>
+        <div class="core-desc">Zero-reflection mapping via compiled expressions. Faster than Dapper on repeated queries.</div>
+        <div class="core-details" style="color:#1A4FA0">
+          <div>› Compiled expression cache</div>
+          <div>› Convention over configuration</div>
+          <div>› Custom type converters</div>
+          <div>› Nullable support</div>
+        </div>
+      </div>
+      <div class="card card-core card-amber" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>🔨</span><span style="color:#92550A">Query Builder</span></div>
+        <div class="core-desc">Generates parameterized SQL from fluent API. Never concatenates strings.</div>
+        <div class="core-details" style="color:#92550A">
+          <div>› WHERE / AND / OR chains</div>
+          <div>› JOIN support</div>
+          <div>› GROUP BY + HAVING</div>
+          <div>› Subquery support</div>
+        </div>
+      </div>
+      <div class="card card-core card-green" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>🔗</span><span style="color:#1A7A4A">Relation Loader</span></div>
+        <div class="core-desc">Simple 1:1 and 1:N relations. No lazy loading — always explicit.</div>
+        <div class="core-details" style="color:#1A7A4A">
+          <div>› Include&lt;T&gt;()</div>
+          <div>› 1:1 and 1:N only</div>
+          <div>› Async batched loading</div>
+          <div>› No N+1 problem</div>
+        </div>
+      </div>
+      <div class="card card-core card-purple" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>🔐</span><span style="color:#5A1A9A">Transaction Scope</span></div>
+        <div class="core-desc">Lightweight async transaction management with automatic rollback.</div>
+        <div class="core-details" style="color:#5A1A9A">
+          <div>› BeginTransactionAsync()</div>
+          <div>› SavepointAsync()</div>
+          <div>› Auto-rollback on exception</div>
+          <div>› Nested scope support</div>
+        </div>
+      </div>
+      <div class="card card-core card-teal" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>⚡</span><span style="color:#0A7A7A">Query Cache</span></div>
+        <div class="core-desc">Optional in-memory cache for read-heavy queries. TTL-based invalidation.</div>
+        <div class="core-details" style="color:#0A7A7A">
+          <div>› Per-query TTL</div>
+          <div>› Tag-based invalidation</div>
+          <div>› IMemoryCache backed</div>
+          <div>› opt-in only</div>
+        </div>
+      </div>
+      <div class="card card-core card-rose" onclick="this.classList.toggle('expanded')">
+        <div class="core-title"><span>📋</span><span style="color:#9A1A2E">Migrations</span></div>
+        <div class="core-desc">Lightweight migration runner. Plain SQL files — no DSL to learn.</div>
+        <div class="core-details" style="color:#9A1A2E">
+          <div>› Plain .sql files</div>
+          <div>› Version tracking table</div>
+          <div>› Up / down migrations</div>
+          <div>› Multi-db aware</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"><span class="arrow-label">executes on</span><svg><line x1="1" y1="0" x2="1" y2="28"/><polygon points="1,32 -2,26 4,26"/></svg></div>
+
+    <!-- DB -->
+    <div class="section"><span>Database Providers</span><div></div></div>
+    <div class="db-grid">
+      <div class="card">
+        <div class="db-icon">🐘</div>
+        <div class="db-name">PostgreSQL</div>
+        <span class="tag tag-blue">prod</span>
+      </div>
+      <div class="card">
+        <div class="db-icon">🗃️</div>
+        <div class="db-name">SQLite</div>
+        <span class="tag tag-green">dev</span>
+      </div>
+      <div class="card">
+        <div class="db-icon">🪟</div>
+        <div class="db-name">SQL Server</div>
+        <span class="tag tag-amber">enterprise</span>
+      </div>
+      <div class="card">
+        <div class="db-icon">🐬</div>
+        <div class="db-name">MySQL</div>
+        <span class="tag tag-teal">optional</span>
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="section"><span>Feature Comparison</span><div></div></div>
+    <div class="comparison">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="dapper">Dapper</th>
+            <th class="ef">EF Core</th>
+            <th class="slim">SlimQuery ✦</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Raw SQL</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Query Builder</td><td class="dash">·</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Bulk Operations</td><td class="dash">·</td><td class="dash">·</td><td class="check">✓</td></tr>
+          <tr><td>Migrations</td><td class="dash">·</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>1:N Relations</td><td class="dash">·</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>No Change Tracking</td><td class="check">✓</td><td class="dash">·</td><td class="check">✓</td></tr>
+          <tr><td>Compiled Mappings</td><td class="dash">·</td><td class="dash">·</td><td class="check">✓</td></tr>
+          <tr><td>Zero config models</td><td class="check">✓</td><td class="dash">·</td><td class="check">✓</td></tr>
+          <tr><td>Query Cache</td><td class="dash">·</td><td class="dash">·</td><td class="check">✓</td></tr>
+          <tr><td>Lightweight</td><td class="check">✓</td><td class="dash">·</td><td class="check">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>SlimQuery — Micro ORM for .NET</span>
+      <span style="color:#E2DDD6">·</span>
+      <span class="tag tag-green">concept stage</span>
+    </div>
+  </div>
+</body>
+</html>
